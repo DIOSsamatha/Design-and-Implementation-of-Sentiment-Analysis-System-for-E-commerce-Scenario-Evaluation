@@ -1,0 +1,2718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电商评论情感分析系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 { text-align: center; color: #333; margin-bottom: 10px; font-size: 2.5em; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 1.1em; }
+
+        .login-section {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .login-card {
+            flex: 1;
+            min-width: 300px;
+            max-width: 450px;
+            padding: 30px;
+            border-radius: 12px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+        }
+        .login-card h2 { margin-bottom: 20px; color: #333; text-align: center; }
+        .login-card input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        .login-card input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102,126,234,0.3);
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85em;
+            width: auto;
+            margin-right: 5px;
+        }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .status-msg {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        .status-success { background: #d4edda; color: #155724; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-info { background: #d1ecf1; color: #0c5460; }
+        .status-warning { background: #fff3cd; color: #856404; }
+
+        .dashboard { display: none; }
+        .dashboard.active { display: flex; }
+        .dashboard-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+        }
+        .sidebar {
+            flex: 0 0 300px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+        }
+        .main-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .sidebar h3 {
+            margin-bottom: 20px;
+            color: #333;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        .user-info {
+            margin-bottom: 30px;
+        }
+        .user-info h4 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+        .user-info p {
+            margin-bottom: 5px;
+            color: #666;
+        }
+        .btn-logout {
+            width: 100%;
+            margin-top: 15px;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .btn-logout:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .section-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 2px solid #e9ecef;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .section-card h3 {
+            margin-bottom: 20px;
+            color: #333;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #e9ecef;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .tab-btn:hover:not(.active) { background: #dee2e6; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        .input-group textarea, .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        .input-group textarea {
+            min-height: 150px;
+            resize: vertical;
+            flex: 1;
+        }
+        .input-group textarea:focus, .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102,126,234,0.3);
+        }
+
+        .file-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .file-upload-area:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .file-upload-area input[type="file"] { display: none; }
+        .upload-icon { font-size: 3em; color: #667eea; margin-bottom: 10px; }
+        .upload-hint { color: #666; font-size: 0.9em; }
+
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+        .progress-container.active { display: block; }
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+        .progress-msg { text-align: center; margin-top: 10px; color: #666; }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .history-table th, .history-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .history-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .history-table tr:hover { background: #f8f9fa; }
+        .history-table tr:last-child td { border-bottom: none; }
+
+        .label-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .label-positive { background: #d4edda; color: #155724; }
+        .label-neutral { background: #fff3cd; color: #856404; }
+        .label-negative { background: #f8d7da; color: #721c24; }
+
+        .log-box {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 15px;
+            display: none;
+        }
+        .log-box.active { display: block; }
+        .log-toggle {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .metric-card h4 { color: #666; margin-bottom: 10px; }
+        .metric-card .value { font-size: 2em; font-weight: bold; color: #667eea; }
+        .metric-card .label { font-size: 0.9em; color: #999; }
+
+        .chart-container { margin-top: 30px; text-align: center; }
+        .chart-title { font-size: 1.3em; margin-bottom: 15px; color: #333; font-weight: 600; }
+        .chart-img { max-width: 100%; border-radius: 8px; }
+
+        .link-btn {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .link-btn:hover { text-decoration: underline; }
+
+        .comments-scroll-box {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            background: white;
+        }
+        .comment-item {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .comment-item:last-child {
+            border-bottom: none;
+        }
+        .comment-content {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .form-container {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .result-box {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .word-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .word-item:hover { background: #f0f4ff; }
+
+        @media (max-width: 768px) {
+            .login-section { flex-direction: column; }
+            .login-card { max-width: 100%; }
+            .dashboard-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                flex: 1;
+                order: 2;
+            }
+            .main-content {
+                order: 1;
+            }
+            .btn-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>电商评论情感分析系统</h1>
+        <p class="subtitle">BERT vs BiLSTM-Attention vs SVM 模型性能比较</p>
+
+        <div id="loginSection" class="login-section">
+            <div class="login-card">
+                <h2>用户登录</h2>
+                <input type="text" id="loginUsername" placeholder="请输入用户名" value="admin">
+                <input type="password" id="loginPassword" placeholder="请输入密码" value="admin123">
+                <button class="btn btn-primary" onclick="userLogin()">登录</button>
+                <p style="text-align: center; margin-top: 15px; color: #666;">
+                    还没有账号？<a class="link-btn" onclick="showRegister()">立即注册</a>
+                </p>
+                <div id="loginStatus" class="status-msg" style="display: none;"></div>
+            </div>
+
+            <div class="login-card" id="registerCard" style="display: none;">
+                <h2>用户注册</h2>
+                <input type="text" id="regUsername" placeholder="请输入用户名（至少3个字符）" value="testuser">
+                <input type="password" id="regPassword" placeholder="请输入密码（至少6个字符）" value="password123">
+                <input type="email" id="regEmail" placeholder="请输入邮箱（可选）" value="test@example.com">
+                <button class="btn btn-primary" onclick="userRegister()">注册</button>
+                <p style="text-align: center; margin-top: 15px; color: #666;">
+                    已有账号？<a class="link-btn" onclick="showLogin()">立即登录</a>
+                </p>
+                <div id="registerStatus" class="status-msg" style="display: none;"></div>
+            </div>
+
+            <div class="login-card">
+                <h2>最近登录</h2>
+                <div id="recentUsersList" style="margin-bottom: 20px;">
+                    <p style="text-align: center; color: #666; font-style: italic;">加载中...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="dashboard" class="dashboard">
+            <div class="dashboard-container">
+                <div class="sidebar">
+                    <div class="user-info">
+                        <h3>用户信息</h3>
+                        <h4 id="welcomeText">欢迎回来！</h4>
+                        <p id="userEmail"></p>
+                        <button class="btn-logout" onclick="userLogout()">退出登录</button>
+                    </div>
+                    
+                    <div class="history-section">
+                        <h3>历史记录</h3>
+                        <div id="historyList" style="max-height: 300px; overflow-y: auto;">
+                            <p style="text-align: center; color: #666; font-style: italic;">加载中...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="main-content">
+                    <div style="width: 100%;">
+                        <div class="tabs">
+                            <button class="tab-btn active" onclick="switchTab('input', event)">输入评论</button>
+                            <button class="tab-btn" onclick="switchTab('document', event)">上传文档识别评论</button>
+                            <button class="tab-btn" onclick="switchTab('analysis', event)">模型训练与分析</button>
+                            <button class="tab-btn" onclick="switchTab('marketing', event)">营销文案生成</button>
+                            <button class="tab-btn" onclick="switchTab('products', event)">商品管理</button>
+                            <button class="tab-btn" onclick="switchTab('dictionary', event)">情感词典</button>
+                            <button class="tab-btn" id="adminTabBtn" onclick="switchTab('admin', event)" style="display: none;">管理员面板</button>
+                        </div>
+
+                        <div id="tabInput" class="tab-content active">
+                            <div class="section-card">
+                                <h3>提交评论内容</h3>
+                                <div style="display: flex; flex-direction: column; flex: 1;">
+                                    <div class="input-group">
+                                        <label>DeepSeek API 密钥</label>
+                                        <input type="password" id="apiKey" placeholder="请输入 DeepSeek API 密钥（用于情感分析）" value="">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>商品品名（可选）</label>
+                                        <input type="text" id="productName" placeholder="例如：某某品牌无线蓝牙耳机" value="无线蓝牙耳机">
+                                    </div>
+                                    <div class="input-group" style="flex: 1; display: flex; flex-direction: column;">
+                                        <label>输入电商评论（每行一条，至少10条）</label>
+                                        <textarea id="commentsInput" placeholder="每行一条评论，例如：&#10;商品质量很好，物流很快，包装精美，非常满意！&#10;质量很差，用了一次就坏了，不推荐&#10;...">商品质量很好，物流很快，包装精美，非常满意！
+质量很差，用了一次就坏了，不推荐
+音质清晰，佩戴舒适，续航时间长，值得购买
+外观美观，手感舒适，功能齐全，性价比高
+物流速度慢，包装破损，商品有瑕疵，不满意
+服务态度好，响应及时，解决问题快，好评
+价格实惠，质量可靠，物流迅速，推荐购买
+商品与描述不符，质量一般，不建议购买
+做工精细，材质优良，设计合理，非常喜欢
+客服态度差，售后不完善，不推荐购买</textarea>
+                                    </div>
+                                    <button class="btn btn-primary" onclick="submitComments()">提交并分析</button>
+                                    <div id="inputProgress" class="progress-container" style="margin-top: 20px;">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="inputProgressFill">0%</div>
+                                        </div>
+                                        <div class="progress-msg" id="inputProgressMsg">准备开始...</div>
+                                    </div>
+                                    <button class="log-toggle" onclick="toggleLog('inputLog')" style="margin-top: 10px;">查看分析日志</button>
+                                    <div id="inputLog" class="log-box"></div>
+                                </div>
+                            </div>
+
+                            <div id="inputResultsSection" class="section-card" style="display: none;">
+                                <h3>分析结果</h3>
+                                <div id="inputMetricsDisplay" class="metrics-grid"></div>
+                                <!-- 情感分布 -->
+                                <div class="chart-container">
+                                    <div class="chart-title">情感分布</div>
+                                    <img id="inputSentimentChart" class="chart-img" src="" style="display: none;">
+                                </div>
+                                <!-- 模型性能比较 -->
+                                <div style="margin-top: 30px;">
+                                    <h4>模型性能比较</h4>
+                                    <div class="chart-container" style="width: 100%;">
+                                        <img id="inputPerformanceChart" class="chart-img" src="" style="display: none; width: 100%; max-width: 1600px;">
+                                    </div>
+                                </div>
+                                <!-- 混淆矩阵对比 -->
+                                <div class="chart-container" style="margin-top: 30px;">
+                                    <div class="chart-title">混淆矩阵对比</div>
+                                    <img id="inputConfusionChart" class="chart-img" src="" style="display: none;">
+                                </div>
+                                <!-- 智能分析总结和经营建议 -->
+                                <div style="margin-top: 30px;">
+                                    <h4>智能分析总结</h4>
+                                    <div id="inputSummary" class="result-box"></div>
+                                </div>
+                                <div style="margin-top: 30px;">
+                                    <h4>经营建议</h4>
+                                    <div id="inputAdvice" class="result-box"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tabDocument" class="tab-content">
+                            <div class="section-card">
+                                <h3>上传文件夹识别评论</h3>
+                                <div style="display: flex; flex-direction: column; flex: 1;">
+                                    <div class="input-group">
+                                        <label>商品品名（可选）</label>
+                                        <input type="text" id="screenshotProductName" placeholder="请输入商品名称" value="无线蓝牙耳机">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>DeepSeek API密钥</label>
+                                        <input type="password" id="screenshotApiKey" placeholder="请输入 DeepSeek API密钥" value="">
+                                    </div>
+                                    <div class="file-upload-area" onclick="document.getElementById('screenshotFile').click()">
+                                        <div class="upload-icon">📁</div>
+                                        <p>点击选择文件夹</p>
+                                        <p class="upload-hint">支持文件夹中的 .txt, .csv, .xlsx 格式文件</p>
+                                        <input type="file" id="screenshotFile" webkitdirectory directory multiple onchange="handleFolderSelect(this)">
+                                    </div>
+                                    <div id="screenshotPreview" style="margin-top: 15px; display: none;">
+                                        <p id="screenshotName"></p>
+                                        <button class="btn btn-primary" onclick="uploadFolder()">识别评论</button>
+                                    </div>
+                                    <div id="screenshotStatus" class="status-msg" style="display: none; margin-top: 15px;"></div>
+                                    <div id="extractedComments" style="margin-top: 20px; display: none;">
+                                        <h4>识别出的评论：</h4>
+                                        <div id="extractedCommentsList" class="comments-scroll-box"></div>
+                                        <button class="btn btn-primary" style="margin-top: 15px;" onclick="analyzeExtractedComments()">分析这些评论</button>
+                                        
+                                        <div style="margin-top: 30px;">
+                                            <h3>评论统计</h3>
+                                            <div id="commentStatistics" style="display: none; margin-bottom: 20px;">
+                                                <div class="metrics-grid">
+                                                    <div class="metric-card">
+                                                        <h4>总评论数</h4>
+                                                        <div class="value" id="totalComments">0</div>
+                                                    </div>
+                                                    <div class="metric-card">
+                                                        <h4>正面评论</h4>
+                                                        <div class="value" id="positiveComments" style="color: #155724;">0</div>
+                                                    </div>
+                                                    <div class="metric-card">
+                                                        <h4>负面评论</h4>
+                                                        <div class="value" id="negativeComments" style="color: #721c24;">0</div>
+                                                    </div>
+                                                    <div class="metric-card">
+                                                        <h4>中性评论</h4>
+                                                        <div class="value" id="neutralComments" style="color: #856404;">0</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="documentProgress" class="progress-container" style="margin-top: 20px;">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="documentProgressFill">0%</div>
+                                        </div>
+                                        <div class="progress-msg" id="documentProgressMsg">准备开始...</div>
+                                    </div>
+                                    <button class="log-toggle" onclick="toggleLog('documentLog')" style="margin-top: 10px;">查看分析日志</button>
+                                    <div id="documentLog" class="log-box"></div>
+                                </div>
+                            </div>
+
+                            <div id="documentResultsSection" class="section-card" style="display: none;">
+                                <h3>分析结果</h3>
+                                <div id="documentMetricsDisplay" class="metrics-grid"></div>
+                                <!-- 情感分布 -->
+                                <div class="chart-container">
+                                    <div class="chart-title">情感分布</div>
+                                    <img id="documentSentimentChart" class="chart-img" src="" style="display: none;">
+                                </div>
+                                <!-- 模型性能比较 -->
+                                <div style="margin-top: 30px;">
+                                    <h4>模型性能比较</h4>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                        <div class="chart-container">
+                                            <div class="chart-title">准确率比较</div>
+                                            <img id="documentPerformanceChart" class="chart-img" src="" style="display: none;">
+                                        </div>
+                                        <div class="chart-container">
+                                            <div class="chart-title">F1分数比较</div>
+                                            <img id="documentF1Chart" class="chart-img" src="" style="display: none;">
+                                        </div>
+                                        <div class="chart-container">
+                                            <div class="chart-title">精确率召回率比较</div>
+                                            <img id="documentPrecisionRecallChart" class="chart-img" src="" style="display: none;">
+                                        </div>
+                                        <div class="chart-container">
+                                            <div class="chart-title">模型性能雷达图</div>
+                                            <img id="documentRadarChart" class="chart-img" src="" style="display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- 混淆矩阵对比 -->
+                                <div class="chart-container" style="margin-top: 30px;">
+                                    <div class="chart-title">混淆矩阵对比</div>
+                                    <img id="documentConfusionChart" class="chart-img" src="" style="display: none;">
+                                </div>
+                                <!-- 智能分析总结和经营建议 -->
+                                <div style="margin-top: 30px;">
+                                    <h4>智能分析总结</h4>
+                                    <div id="documentSummary" class="result-box"></div>
+                                </div>
+                                <div style="margin-top: 30px;">
+                                    <h4>经营建议</h4>
+                                    <div id="documentAdvice" class="result-box"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tabAnalysis" class="tab-content">
+                            <div class="section-card">
+                                <h3>模型训练与评估</h3>
+                                <div style="display: flex; flex-direction: column; flex: 1;">
+                                    <div class="input-group">
+                                        <label>DeepSeek API 密钥（可选，用于真实分析）</label>
+                                        <input type="password" id="trainingApiKey" placeholder="请输入 DeepSeek API 密钥" value="">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>选择模型</label>
+                                        <select id="modelSelect">
+                                            <option value="all">所有模型（BERT + BiLSTM-Attention + SVM）</option>
+                                            <option value="bert">BERT 模型</option>
+                                            <option value="bilstm">BiLSTM-Attention 模型</option>
+                                            <option value="svm">SVM 模型</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>数据集类型</label>
+                                        <select id="datasetType">
+                                            <option value="simulated">模拟数据（快速，推荐）</option>
+                                            <option value="real">真实数据（需要 API）</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>关联商品（可选）</label>
+                                        <select id="trainingProductSelect">
+                                            <option value="">不关联商品</option>
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-primary" onclick="runTraining()">开始训练模型</button>
+                                    <div id="trainingProgress" class="progress-container">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="progressFill">0%</div>
+                                        </div>
+                                        <div class="progress-msg" id="progressMsg">准备开始...</div>
+                                    </div>
+                                    <button class="log-toggle" onclick="toggleLog('trainingLog')" style="margin-top: 10px;">查看训练日志</button>
+                                    <div id="trainingLog" class="log-box"></div>
+                                </div>
+                            </div>
+
+                            <div id="resultsSection" class="section-card" style="display: none;">
+                                <h3>评估结果</h3>
+                                <div id="metricsDisplay" class="metrics-grid"></div>
+                                <div class="chart-container">
+                                    <div class="chart-title">模型性能比较</div>
+                                    <img id="performanceChart" class="chart-img" src="" style="display: none;">
+                                </div>
+                                <div class="chart-container">
+                                    <div class="chart-title">混淆矩阵</div>
+                                    <img id="confusionChart" class="chart-img" src="" style="display: none;">
+                                </div>
+                            </div>
+                            
+                            <div class="section-card">
+                                <h3>训练记录管理</h3>
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" onclick="loadTrainingRecords()">查看所有训练记录</button>
+                                    <button class="btn btn-secondary" onclick="showCreateRecordForm()">创建训练记录</button>
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label>按商品查询</label>
+                                    <div style="display: flex; gap: 10px;">
+                                        <select id="recordProductSelect" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em;">
+                                            <option value="">所有商品</option>
+                                        </select>
+                                        <button class="btn btn-secondary" onclick="loadRecordsByProduct()" style="width: auto;">查询</button>
+                                    </div>
+                                </div>
+                                
+                                <div id="createRecordForm" class="form-container" style="display: none;">
+                                    <h4>创建训练记录</h4>
+                                    <div class="input-group">
+                                        <label>模型名称</label>
+                                        <select id="newRecordModelName">
+                                            <option value="BERT">BERT</option>
+                                            <option value="BiLSTM-Attention">BiLSTM-Attention</option>
+                                            <option value="SVM">SVM</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>数据集类型</label>
+                                        <select id="newRecordDatasetType">
+                                            <option value="simulated">模拟数据</option>
+                                            <option value="real">真实数据</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>商品（可选）</label>
+                                        <select id="newRecordProductId">
+                                            <option value="">不关联商品</option>
+                                        </select>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                        <button class="btn btn-primary" onclick="createTrainingRecord()">保存</button>
+                                        <button class="btn btn-secondary" onclick="hideCreateRecordForm()">取消</button>
+                                    </div>
+                                </div>
+                                
+                                <div id="trainingRecordsList">
+                                    <p style="text-align: center; color: #666; font-style: italic;">点击"查看所有训练记录"加载数据...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tabMarketing" class="tab-content">
+                            <div class="section-card">
+                                <h3>营销文案生成</h3>
+                                <div style="display: flex; flex-direction: column; flex: 1;">
+                                    <div class="input-group">
+                                        <label>商品名称</label>
+                                        <input type="text" id="marketingProductName" placeholder="例如：某某品牌无线蓝牙耳机" value="无线蓝牙耳机">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>DeepSeek API 密钥</label>
+                                        <input type="password" id="marketingApiKey" placeholder="请输入 DeepSeek API 密钥（用于生成营销文案）" value="">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>经营建议</label>
+                                        <textarea id="marketingBusinessAdvice" placeholder="请输入经营建议，例如：1. 优化产品质量，提高用户满意度 2. 加强售后服务，提升品牌形象...">1. 优化产品质量，提高用户满意度
+2. 加强售后服务，提升品牌形象
+3. 增加产品功能，满足更多用户需求
+4. 优化价格策略，提高市场竞争力
+5. 加强品牌宣传，提高品牌知名度</textarea>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>好评列表（每行一条）</label>
+                                        <textarea id="marketingPositiveReviews" placeholder="请输入好评列表，每行一条，例如：&#10;商品质量很好，物流很快，包装精美，非常满意！&#10;音质清晰，佩戴舒适，续航时间长，值得购买&#10;...">商品质量很好，物流很快，包装精美，非常满意！
+音质清晰，佩戴舒适，续航时间长，值得购买
+外观美观，手感舒适，功能齐全，性价比高
+服务态度好，响应及时，解决问题快，好评
+价格实惠，质量可靠，物流迅速，推荐购买</textarea>
+                                    </div>
+                                    <button class="btn btn-primary" onclick="generateMarketingCopy()">生成营销文案</button>
+                                    <div id="marketingProgress" class="progress-container" style="margin-top: 20px;">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="marketingProgressFill">0%</div>
+                                        </div>
+                                        <div class="progress-msg" id="marketingProgressMsg">准备开始...</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="marketingResultsSection" class="section-card" style="display: none;">
+                                <h3>生成结果</h3>
+                                <div style="margin-top: 20px;">
+                                    <h4>营销文案</h4>
+                                    <div id="marketingCopyResult" class="result-box"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tabProducts" class="tab-content">
+                            <div id="productsMainSection" class="section-card">
+                                <h3>商品管理</h3>
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" onclick="showCreateProductForm()">创建新商品</button>
+                                    <button class="btn btn-secondary" onclick="loadProducts()">刷新商品列表</button>
+                                </div>
+                                
+                                <div id="createProductForm" class="form-container" style="display: none;">
+                                    <h4>创建新商品</h4>
+                                    <div class="input-group">
+                                        <label>商品名称</label>
+                                        <input type="text" id="newProductName" placeholder="请输入商品名称">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>商品分类</label>
+                                        <input type="text" id="newProductCategory" placeholder="请输入商品分类">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>商品描述</label>
+                                        <textarea id="newProductDescription" placeholder="请输入商品描述"></textarea>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                        <button class="btn btn-primary" onclick="createProduct()">保存</button>
+                                        <button class="btn btn-secondary" onclick="hideCreateProductForm()">取消</button>
+                                    </div>
+                                </div>
+                                
+                                <div id="productsList">
+                                    <p style="text-align: center; color: #666; font-style: italic;">点击"刷新商品列表"加载数据...</p>
+                                </div>
+                            </div>
+                            
+                            <div id="productCommentsSection" class="section-card" style="display: none;">
+                                <h3>商品评论管理</h3>
+                                <div style="margin-bottom: 20px;">
+                                    <h4 id="currentProductName"></h4>
+                                    <button class="btn btn-secondary" onclick="showProductsList()">返回商品列表</button>
+                                </div>
+                                
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" onclick="showAddCommentsForm()">批量添加评论</button>
+                                    <button class="btn btn-secondary" onclick="loadProductComments()">刷新评论</button>
+                                </div>
+                                
+                                <div id="addCommentsForm" class="form-container" style="display: none;">
+                                    <h4>批量添加评论</h4>
+                                    <div class="input-group">
+                                        <label>评论内容（每行一条）</label>
+                                        <textarea id="bulkCommentsInput" placeholder="每行一条评论，例如：&#10;商品质量很好，物流很快，包装精美，非常满意！&#10;质量很差，用了一次就坏了，不推荐&#10;..."></textarea>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                        <button class="btn btn-primary" onclick="saveBulkComments()">保存评论</button>
+                                        <button class="btn btn-secondary" onclick="hideAddCommentsForm()">取消</button>
+                                    </div>
+                                </div>
+                                
+                                <div id="commentsList">
+                                    <p style="text-align: center; color: #666; font-style: italic;">加载中...</p>
+                                </div>
+                            </div>
+                            
+                            <div id="userHistorySection" class="section-card">
+                                <h3>我的历史记录</h3>
+                                <div style="margin-top: 20px;">
+                                    <h4>登录历史</h4>
+                                    <button class="btn btn-secondary" onclick="loadUserLoginHistory()">刷新</button>
+                                    <div id="userLoginHistory" style="margin-top: 15px;"></div>
+                                </div>
+                                <div style="margin-top: 30px;">
+                                    <h4>分析历史</h4>
+                                    <button class="btn btn-secondary" onclick="loadUserAnalysisHistory()">刷新</button>
+                                    <div id="userAnalysisHistory" style="margin-top: 15px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tabDictionary" class="tab-content">
+                            <div class="section-card">
+                                <h3>情感词典管理</h3>
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" onclick="loadEmotionDictionary()">查询情感词典</button>
+                                    <button class="btn btn-secondary" onclick="showAddWordForm()">添加词汇</button>
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label>按类型筛选词汇</label>
+                                    <div style="display: flex; gap: 10px;">
+                                        <select id="sentimentTypeFilter" style="flex: 1;">
+                                            <option value="">全部类型</option>
+                                            <option value="0">负面</option>
+                                            <option value="1">中性</option>
+                                            <option value="2">正面</option>
+                                        </select>
+                                        <button class="btn btn-secondary" onclick="filterEmotionWords()" style="width: auto;">筛选</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label>搜索词汇</label>
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="text" id="wordSearch" placeholder="输入词汇搜索" style="flex: 1;">
+                                        <button class="btn btn-secondary" onclick="searchEmotionWords()" style="width: auto;">搜索</button>
+                                    </div>
+                                </div>
+                                
+                                <div id="addWordForm" class="form-container" style="display: none;">
+                                    <h4 id="formTitle">添加情感词汇</h4>
+                                    <input type="hidden" id="currentWordId">
+                                    <div class="input-group">
+                                        <label>词汇</label>
+                                        <input type="text" id="wordInput" placeholder="请输入情感词汇">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>情感类型</label>
+                                        <select id="sentimentTypeInput">
+                                            <option value="0">负面</option>
+                                            <option value="1">中性</option>
+                                            <option value="2">正面</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>权重</label>
+                                        <input type="number" id="weightInput" step="0.1" value="1.0" placeholder="请输入权重">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>强度</label>
+                                        <select id="intensityInput">
+                                            <option value="low">低</option>
+                                            <option value="medium" selected>中</option>
+                                            <option value="high">高</option>
+                                        </select>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                        <button class="btn btn-primary" onclick="saveEmotionWord()">保存</button>
+                                        <button class="btn btn-secondary" onclick="hideAddWordForm()">取消</button>
+                                    </div>
+                                </div>
+                                
+                                <div id="emotionDictionaryList">
+                                    <p style="text-align: center; color: #666; font-style: italic;">点击"查询情感词典"加载数据...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tabAdmin" class="tab-content">
+                            <div class="section-card">
+                                <h3>系统统计</h3>
+                                <div id="adminStats" class="metrics-grid"></div>
+                            </div>
+                            
+                            <div class="section-card">
+                                <h3>系统配置</h3>
+                                <div id="adminConfig"></div>
+                            </div>
+
+                            <div class="section-card">
+                                <h3>用户管理</h3>
+                                <button class="btn btn-primary" onclick="loadUsers()">刷新用户列表</button>
+                                <div id="usersList" style="margin-top: 20px;"></div>
+                            </div>
+
+                            <div class="section-card">
+                                <h3>登录历史</h3>
+                                <button class="btn btn-primary" onclick="loadLoginHistory()">刷新登录历史</button>
+                                <div id="loginHistoryList" style="margin-top: 20px;"></div>
+                            </div>
+
+                            <div class="section-card">
+                                <h3>分析历史</h3>
+                                <button class="btn btn-primary" onclick="loadAllAnalysisHistory()">刷新分析历史</button>
+                                <div id="allAnalysisHistory" style="margin-top: 20px;"></div>
+                            </div>
+
+                            <div class="section-card">
+                                <h3>审计日志</h3>
+                                <button class="btn btn-primary" onclick="loadAuditLogs()">刷新审计日志</button>
+                                <div id="auditLogsList" style="margin-top: 20px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentProductId = null;
+        let currentAnalysisHistoryId = null;
+        let extractedCommentsList = [];
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = 'status-msg status-' + type;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function showLogin() {
+            document.getElementById('registerCard').style.display = 'none';
+            document.querySelector('.login-card:not(#registerCard)').style.display = 'block';
+        }
+
+        function showRegister() {
+            document.getElementById('registerCard').style.display = 'block';
+            document.querySelector('.login-card:not(#registerCard)').style.display = 'none';
+        }
+
+        async function userLogin() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus('loginStatus', '登录成功！', 'success');
+                    setTimeout(() => {
+                        document.getElementById('loginSection').style.display = 'none';
+                        document.getElementById('dashboard').classList.add('active');
+                        document.getElementById('welcomeText').textContent = '欢迎回来，' + data.user.username + '！';
+                        document.getElementById('userEmail').textContent = data.user.email || '未设置邮箱';
+                        checkAdminRole(data.user);
+                        loadRecentUsers();
+                        loadTrainingHistory();
+                        loadProductsForSelect();
+                        // 如果是管理员，加载管理员数据
+                        if (data.user.role === 'admin') {
+                            loadAdminData();
+                        }
+                    }, 1000);
+                } else {
+                    showStatus('loginStatus', data.error || data.message || '登录失败', 'error');
+                }
+            } catch (error) {
+                showStatus('loginStatus', '网络错误，请稍后重试', 'error');
+                console.error(error);
+            }
+        }
+
+        async function userRegister() {
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const email = document.getElementById('regEmail').value;
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, email })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus('registerStatus', '注册成功！请登录', 'success');
+                    setTimeout(() => {
+                        showLogin();
+                    }, 2000);
+                } else {
+                    showStatus('registerStatus', data.error || data.message || '注册失败', 'error');
+                }
+            } catch (error) {
+                showStatus('registerStatus', '网络错误，请稍后重试', 'error');
+                console.error(error);
+            }
+        }
+
+        async function userLogout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                document.getElementById('dashboard').classList.remove('active');
+                document.getElementById('loginSection').style.display = 'flex';
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function loadRecentUsers() {
+            try {
+                const response = await fetch('/api/auth/login_history');
+                const data = await response.json();
+                
+                const recentUsersList = document.getElementById('recentUsersList');
+                if (data.success && data.history) {
+                    let html = '';
+                    data.history.forEach(user => {
+                        html += '<div style="margin-bottom: 10px; padding: 10px; background: #f0f4ff; border-radius: 6px;">';
+                        html += '<strong>' + (user.username || '未知用户') + '</strong><br>';
+                        html += '<small style="color: #666;">' + (user.login_time || '未知时间') + '</small>';
+                        html += '</div>';
+                    });
+                    recentUsersList.innerHTML = html || '<p style="text-align: center; color: #666;">暂无登录记录</p>';
+                } else {
+                    recentUsersList.innerHTML = '<p style="text-align: center; color: #666;">加载失败</p>';
+                }
+            } catch (error) {
+                document.getElementById('recentUsersList').innerHTML = '<p style="text-align: center; color: #666;">加载失败</p>';
+                console.error(error);
+            }
+        }
+
+        async function loadDefaultCharts() {
+            try {
+                const response = await fetch('/api/train/metrics');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 显示默认图表区域
+                    document.getElementById('defaultResultsSection').style.display = 'block';
+                    
+                    const metricsDisplay = document.getElementById('defaultMetricsDisplay');
+                    
+                    try {
+                        const adviceResponse = await fetch('/api/train/advice');
+                        const adviceData = await adviceResponse.json();
+                        
+                        if (adviceData.success) {
+                            document.getElementById('defaultSummary').textContent = adviceData.summary || '暂无总结';
+                            document.getElementById('defaultAdvice').textContent = adviceData.advice || '暂无建议';
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        document.getElementById('defaultSummary').textContent = '暂无总结';
+                        document.getElementById('defaultAdvice').textContent = '暂无建议';
+                    }
+                    
+                    const performanceChart = document.getElementById('defaultPerformanceChart');
+                    const confusionChart = document.getElementById('defaultConfusionChart');
+                    const sentimentChart = document.getElementById('defaultSentimentChart');
+                    
+                    performanceChart.src = '/performance';
+                    performanceChart.style.display = 'block';
+                    
+                    confusionChart.src = '/confusion';
+                    confusionChart.style.display = 'block';
+                    
+                    sentimentChart.src = '/sentiment';
+                    sentimentChart.style.display = 'block';
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function loadTrainingHistory() {
+            try {
+                const response = await fetch('/api/analysis/history');
+                const data = await response.json();
+                
+                const historyList = document.getElementById('historyList');
+                if (data.success && data.history) {
+                    let html = '';
+                    data.history.slice(0, 10).forEach(item => {
+                        html += '<div style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 0.9em; cursor: pointer;" onclick="loadHistoryResult(' + item.id + ')">';
+                        html += '<strong>' + (item.product_name || '未命名商品') + '</strong><br>';
+                        html += '<small style="color: #666;">' + (item.created_at || '未知时间') + '</small>';
+                        html += '</div>';
+                    });
+                    historyList.innerHTML = html || '<p style="text-align: center; color: #666; font-style: italic;">暂无历史记录</p>';
+                } else {
+                    historyList.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">加载失败</p>';
+                }
+            } catch (error) {
+                document.getElementById('historyList').innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">加载失败</p>';
+                console.error(error);
+            }
+        }
+
+        function switchTab(tab, event) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+
+            if (tab === 'products') {
+                loadProducts();
+                loadProductsForSelect();
+            } else if (tab === 'analysis') {
+                loadProductsForSelect();
+            }
+        }
+
+        function toggleLog(logId) {
+            const logBox = document.getElementById(logId);
+            logBox.classList.toggle('active');
+        }
+
+        async function submitComments() {
+            const apiKey = document.getElementById('apiKey').value;
+            const productName = document.getElementById('productName').value;
+            const commentsText = document.getElementById('commentsInput').value;
+            const comments = commentsText.split('\n').filter(c => c.trim());
+
+            if (comments.length < 1) {
+                alert('请至少输入一条评论');
+                return;
+            }
+
+            const progressContainer = document.getElementById('inputProgress');
+            const progressFill = document.getElementById('inputProgressFill');
+            const progressMsg = document.getElementById('inputProgressMsg');
+            const logBox = document.getElementById('inputLog');
+
+            progressContainer.classList.add('active');
+            logBox.classList.add('active');
+            logBox.innerHTML = '开始分析...\n';
+
+            let progress = 0;
+            progressFill.style.width = progress + '%';
+            progressFill.textContent = progress + '%';
+            progressMsg.textContent = '正在准备数据...';
+            logBox.innerHTML += '正在准备数据...\n';
+
+            try {
+                const formData = new FormData();
+                formData.append('comments', JSON.stringify(comments));
+                formData.append('api_key', apiKey);
+                formData.append('product_name', productName);
+                formData.append('dataset_type', 'deepseek');
+
+                const response = await fetch('/api/train', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                progress = 30;
+                progressFill.style.width = progress + '%';
+                progressFill.textContent = progress + '%';
+                progressMsg.textContent = '正在分析评论...';
+                logBox.innerHTML += '正在分析评论...\n';
+
+                const data = await response.json();
+
+                if (data.message === 'DeepSeek分析和训练已开始' || data.success) {
+                    progress = 50;
+                    progressFill.style.width = progress + '%';
+                    progressFill.textContent = progress + '%';
+                    progressMsg.textContent = '正在训练模型...';
+                    logBox.innerHTML += '正在训练模型...\n';
+
+                    await pollTrainingStatus(progressFill, progressMsg, logBox, 'input');
+
+                    progress = 100;
+                    progressFill.style.width = progress + '%';
+                    progressFill.textContent = progress + '%';
+                    progressMsg.textContent = '分析完成！';
+                    logBox.innerHTML += '分析完成！\n';
+
+                    await loadTrainingResults('input');
+                    loadTrainingHistory();
+                } else {
+                    showStatus('loginStatus', data.error || data.message || '分析失败', 'error');
+                    progressContainer.classList.remove('active');
+                }
+            } catch (error) {
+                console.error(error);
+                showStatus('loginStatus', '网络错误，请稍后重试', 'error');
+                progressContainer.classList.remove('active');
+            }
+        }
+
+        async function pollTrainingStatus(progressFill, progressMsg, logBox, type) {
+            return new Promise((resolve) => {
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const response = await fetch('/api/status');
+                        const data = await response.json();
+                        
+                        if (data.logs) {
+                            logBox.innerHTML = data.logs.join('\n') + '\n';
+                            logBox.scrollTop = logBox.scrollHeight;
+                        }
+                        
+                        if (data.progress !== undefined) {
+                            progressFill.style.width = data.progress + '%';
+                            progressFill.textContent = data.progress + '%';
+                        }
+                        
+                        if (data.message) {
+                            progressMsg.textContent = data.message;
+                        }
+                        
+                        if (data.error) {
+                            clearInterval(pollInterval);
+                            resolve();
+                            return;
+                        }
+                        
+                        if (data.progress === 100 || !data.is_training) {
+                            clearInterval(pollInterval);
+                            resolve();
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        clearInterval(pollInterval);
+                        resolve();
+                    }
+                }, 1000);
+            });
+        }
+
+        async function loadTrainingResults(type) {
+            try {
+                const response = await fetch('/api/train/metrics');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultsSection = document.getElementById(type + 'ResultsSection');
+                    const metricsDisplay = document.getElementById(type + 'MetricsDisplay');
+                    const sentimentChart = document.getElementById(type + 'SentimentChart');
+                    const performanceChart = document.getElementById(type + 'PerformanceChart');
+                    const confusionChart = document.getElementById(type + 'ConfusionChart');
+                    const f1Chart = document.getElementById(type + 'F1Chart');
+                    const precisionRecallChart = document.getElementById(type + 'PrecisionRecallChart');
+                    const radarChart = document.getElementById(type + 'RadarChart');
+                    
+                    // 如果有模型指标，也显示出来
+                    if (data.metrics && data.metrics.length > 0) {
+                        metricsDisplay.innerHTML = '<div style="width: 100%; margin-top: 20px;"><h4 style="text-align: center;">模型性能指标</h4>';
+                        data.metrics.forEach(model => {
+                            metricsDisplay.innerHTML += `
+                                <div class="metric-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; min-width: 150px;">
+                                    <h4>${model.Model}</h4>
+                                    <div style="margin-top: 10px; font-size: 12px;">
+                                        <p>准确率: ${(model.Accuracy * 100).toFixed(1)}%</p>
+                                        <p>精确率: ${(model.Precision * 100).toFixed(1)}%</p>
+                                        <p>召回率: ${(model.Recall * 100).toFixed(1)}%</p>
+                                        <p>F1分数: ${(model.F1_Score * 100).toFixed(1)}%</p>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        metricsDisplay.innerHTML += '</div>';
+                    } else {
+                        metricsDisplay.innerHTML = '';
+                    }
+                    
+                    try {
+                        const adviceResponse = await fetch('/api/train/advice');
+                        const adviceData = await adviceResponse.json();
+                        
+                        if (adviceData.success) {
+                            document.getElementById(type + 'Summary').textContent = adviceData.summary || '暂无总结';
+                            document.getElementById(type + 'Advice').textContent = adviceData.advice || '暂无建议';
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        document.getElementById(type + 'Summary').textContent = '暂无总结';
+                        document.getElementById(type + 'Advice').textContent = '暂无建议';
+                    }
+                    
+                    // 情感分布饼图
+                    if (sentimentChart) {
+                        sentimentChart.src = '/sentiment';
+                        sentimentChart.style.display = 'block';
+                    }
+                    
+                    // 模型性能图表（输入评论只显示一张）
+                    if (performanceChart) {
+                        performanceChart.src = '/performance';
+                        performanceChart.style.display = 'block';
+                    }
+                    
+                    // F1分数比较（输入评论不显示）
+                    if (f1Chart && type !== 'input') {
+                        f1Chart.src = '/performance';
+                        f1Chart.style.display = 'block';
+                    }
+                    
+                    // 精确率和召回率比较（输入评论不显示）
+                    if (precisionRecallChart && type !== 'input') {
+                        precisionRecallChart.src = '/performance';
+                        precisionRecallChart.style.display = 'block';
+                    }
+                    
+                    // 雷达图（输入评论不显示）
+                    if (radarChart && type !== 'input') {
+                        radarChart.src = '/performance';
+                        radarChart.style.display = 'block';
+                    }
+                    
+                    // 混淆矩阵
+                    if (confusionChart) {
+                        confusionChart.src = '/confusion';
+                        confusionChart.style.display = 'block';
+                    }
+                    
+                    resultsSection.style.display = 'block';
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function loadHistoryResult(historyId) {
+            try {
+                const response = await fetch('/api/analysis/report/' + historyId);
+                const data = await response.json();
+
+                if (data.success && data.report) {
+                    switchTab('input', { target: document.querySelector('.tab-btn') });
+                    
+                    const metricsDisplay = document.getElementById('inputMetricsDisplay');
+                    metricsDisplay.innerHTML = '';
+                    
+                    document.getElementById('inputSummary').textContent = data.report.summary || '暂无总结';
+                    document.getElementById('inputAdvice').textContent = data.report.advice || '暂无建议';
+                    document.getElementById('inputResultsSection').style.display = 'block';
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function handleScreenshotSelect(input) {
+            const file = input.files[0];
+            if (file) {
+                document.getElementById('screenshotName').textContent = '已选择：' + file.name;
+                document.getElementById('screenshotPreview').style.display = 'block';
+            }
+        }
+
+        function handleFolderSelect(input) {
+            const files = input.files;
+            if (files && files.length > 0) {
+                document.getElementById('screenshotName').textContent = '已选择：' + files.length + ' 个文件';
+                document.getElementById('screenshotPreview').style.display = 'block';
+            }
+        }
+
+        async function uploadFolder() {
+            const files = document.getElementById('screenshotFile').files;
+            if (!files || files.length === 0) return;
+
+            const progressContainer = document.getElementById('documentProgress');
+            const progressFill = document.getElementById('documentProgressFill');
+            const progressMsg = document.getElementById('documentProgressMsg');
+            const logBox = document.getElementById('documentLog');
+            const productName = document.getElementById('screenshotProductName').value;
+
+            progressContainer.classList.add('active');
+            logBox.classList.add('active');
+            logBox.innerHTML = '开始上传...\n';
+
+            const BATCH_SIZE = 20; // 每批上传20个文件
+            let allComments = [];
+            let successCount = 0;
+
+            try {
+                for (let i = 0; i < files.length; i += BATCH_SIZE) {
+                    const batchFiles = Array.from(files).slice(i, i + BATCH_SIZE);
+                    
+                    const formData = new FormData();
+                    for (let j = 0; j < batchFiles.length; j++) {
+                        formData.append('files', batchFiles[j]);
+                    }
+                    formData.append('product_name', productName);
+
+                    const progress = Math.round(30 + (i / files.length) * 40);
+                    progressFill.style.width = progress + '%';
+                    progressFill.textContent = progress + '%';
+                    progressMsg.textContent = `正在上传文件... (${Math.min(i + BATCH_SIZE, files.length)}/${files.length})`;
+                    logBox.innerHTML += `正在上传第 ${i + 1}-${Math.min(i + BATCH_SIZE, files.length)} 个文件...\n`;
+
+                    const response = await fetch('/api/platform/upload_folder', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        allComments = allComments.concat(data.comments || []);
+                        successCount += batchFiles.length;
+                        logBox.innerHTML += `第 ${i + 1}-${Math.min(i + BATCH_SIZE, files.length)} 个文件上传成功，已提取 ${data.comments?.length || 0} 条评论\n`;
+                    } else {
+                        logBox.innerHTML += `第 ${i + 1}-${Math.min(i + BATCH_SIZE, files.length)} 个文件上传失败：${data.error || '未知错误'}\n`;
+                    }
+                }
+
+                progressFill.style.width = '70%';
+                progressFill.textContent = '70%';
+                progressMsg.textContent = '正在解析文件...';
+                logBox.innerHTML += '正在解析文件...\n';
+
+                if (successCount > 0) {
+                    extractedCommentsList = allComments;
+                    showExtractedComments(extractedCommentsList);
+
+                    progressFill.style.width = '100%';
+                    progressFill.textContent = '100%';
+                    progressMsg.textContent = '解析完成！';
+                    logBox.innerHTML += `解析完成！成功处理 ${successCount} 个文件，共找到 ${extractedCommentsList.length} 条评论\n`;
+
+                    showStatus('screenshotStatus', '解析成功！找到 ' + extractedCommentsList.length + ' 条评论', 'success');
+                } else {
+                    showStatus('screenshotStatus', '所有文件上传失败', 'error');
+                    logBox.innerHTML += '所有文件上传失败\n';
+                }
+            } catch (error) {
+                showStatus('screenshotStatus', '上传失败：' + error.message, 'error');
+                logBox.innerHTML += '上传失败：' + error.message + '\n';
+                console.error(error);
+            }
+        }
+
+        async function uploadScreenshot() {
+            const file = document.getElementById('screenshotFile').files[0];
+            if (!file) return;
+
+            const progressContainer = document.getElementById('documentProgress');
+            const progressFill = document.getElementById('documentProgressFill');
+            const progressMsg = document.getElementById('documentProgressMsg');
+            const logBox = document.getElementById('documentLog');
+
+            progressContainer.classList.add('active');
+            logBox.classList.add('active');
+            logBox.innerHTML = '开始上传...\n';
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('product_name', document.getElementById('screenshotProductName').value);
+
+            try {
+                progressFill.style.width = '30%';
+                progressFill.textContent = '30%';
+                progressMsg.textContent = '正在上传文件...';
+                logBox.innerHTML += '正在上传文件...\n';
+
+                const response = await fetch('/api/platform/upload_document', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                progressFill.style.width = '70%';
+                progressFill.textContent = '70%';
+                progressMsg.textContent = '正在解析文件...';
+                logBox.innerHTML += '正在解析文件...\n';
+
+                const data = await response.json();
+
+                if (data.success) {
+                    extractedCommentsList = data.comments || [];
+                    showExtractedComments(extractedCommentsList);
+
+                    progressFill.style.width = '100%';
+                    progressFill.textContent = '100%';
+                    progressMsg.textContent = '解析完成！';
+                    logBox.innerHTML += '解析完成！\n';
+                } else {
+                    showStatus('screenshotStatus', data.error || data.message || '解析失败', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                showStatus('screenshotStatus', '网络错误，请稍后重试', 'error');
+            }
+        }
+
+        function showExtractedComments(comments) {
+            const extractedCommentsListEl = document.getElementById('extractedCommentsList');
+            const commentStatistics = document.getElementById('commentStatistics');
+            const totalComments = document.getElementById('totalComments');
+            const positiveComments = document.getElementById('positiveComments');
+            const negativeComments = document.getElementById('negativeComments');
+            const neutralComments = document.getElementById('neutralComments');
+
+            let html = '';
+            let positive = 0, negative = 0, neutral = 0;
+
+            comments.forEach((comment, index) => {
+                const label = comment.sentiment_label !== undefined ? comment.sentiment_label : 1;
+                let labelText = '中性';
+                let labelClass = 'label-neutral';
+
+                if (label === 2) {
+                    labelText = '正面';
+                    labelClass = 'label-positive';
+                    positive++;
+                } else if (label === 0) {
+                    labelText = '负面';
+                    labelClass = 'label-negative';
+                    negative++;
+                } else {
+                    neutral++;
+                }
+
+                html += '<div class="comment-item">' +
+                    '<div class="comment-content">' + (comment.content || comment) + '</div>' +
+                    '<div style="margin-top: 5px; font-size: 0.8em; color: #666;">情感：<span class="label-badge ' + labelClass + '">' + labelText + '</span></div>' +
+                    '</div>';
+            });
+
+            extractedCommentsListEl.innerHTML = html;
+            totalComments.textContent = comments.length;
+            positiveComments.textContent = positive;
+            negativeComments.textContent = negative;
+            neutralComments.textContent = neutral;
+
+            commentStatistics.style.display = 'block';
+            document.getElementById('extractedComments').style.display = 'block';
+        }
+
+        async function analyzeExtractedComments() {
+            const apiKey = document.getElementById('screenshotApiKey').value;
+            const productName = document.getElementById('screenshotProductName').value;
+
+            if (extractedCommentsList.length === 0) {
+                alert('没有可分析的评论');
+                return;
+            }
+
+            const progressContainer = document.getElementById('documentProgress');
+            const progressFill = document.getElementById('documentProgressFill');
+            const progressMsg = document.getElementById('documentProgressMsg');
+            const logBox = document.getElementById('documentLog');
+
+            progressContainer.classList.add('active');
+            logBox.classList.add('active');
+            logBox.innerHTML += '开始分析...\n';
+
+            progressFill.style.width = '30%';
+            progressFill.textContent = '30%';
+            progressMsg.textContent = '正在分析评论...';
+
+            try {
+                const comments = extractedCommentsList.map(c => typeof c === 'string' ? c : c.content);
+                const formData = new FormData();
+                formData.append('comments', JSON.stringify(comments));
+                formData.append('api_key', apiKey);
+                formData.append('product_name', productName);
+                formData.append('dataset_type', 'deepseek');
+
+                const response = await fetch('/api/train', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.message === 'DeepSeek分析和训练已开始' || data.success) {
+                    progressFill.style.width = '50%';
+                    progressFill.textContent = '50%';
+                    progressMsg.textContent = '正在训练模型...';
+                    logBox.innerHTML += '正在训练模型...\n';
+
+                    await pollTrainingStatus(progressFill, progressMsg, logBox, 'document');
+
+                    progressFill.style.width = '100%';
+                    progressFill.textContent = '100%';
+                    progressMsg.textContent = '分析完成！';
+                    logBox.innerHTML += '分析完成！\n';
+
+                    await loadTrainingResults('document');
+                    loadTrainingHistory();
+                } else {
+                    showStatus('screenshotStatus', data.error || data.message || '分析失败', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                showStatus('screenshotStatus', '网络错误，请稍后重试', 'error');
+            }
+        }
+
+        async function runTraining() {
+            const apiKey = document.getElementById('trainingApiKey').value;
+            const model = document.getElementById('modelSelect').value;
+            const datasetType = document.getElementById('datasetType').value;
+            const productId = document.getElementById('trainingProductSelect').value;
+
+            const progressContainer = document.getElementById('trainingProgress');
+            const progressFill = document.getElementById('progressFill');
+            const progressMsg = document.getElementById('progressMsg');
+            const logBox = document.getElementById('trainingLog');
+
+            progressContainer.classList.add('active');
+            logBox.classList.add('active');
+            logBox.innerHTML = '开始训练...\n';
+
+            progressFill.style.width = '10%';
+            progressFill.textContent = '10%';
+            progressMsg.textContent = '正在准备训练数据...';
+            logBox.innerHTML += '正在准备训练数据...\n';
+
+            try {
+                const formData = new FormData();
+                formData.append('dataset_type', datasetType);
+                formData.append('api_key', apiKey);
+                if (productId) {
+                    formData.append('product_id', productId);
+                }
+
+                const response = await fetch('/api/train', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                progressFill.style.width = '20%';
+                progressFill.textContent = '20%';
+                progressMsg.textContent = '正在训练模型...';
+                logBox.innerHTML += '正在训练模型...\n';
+
+                const data = await response.json();
+
+                if (data.success || data.message === '训练已开始' || data.message === 'DeepSeek分析和训练已开始') {
+                    await pollTrainingStatus(progressFill, progressMsg, logBox, 'analysis');
+
+                    await showTrainingResults();
+
+                    loadTrainingRecords();
+                } else {
+                    showStatus('loginStatus', data.error || data.message || '训练失败', 'error');
+                    progressContainer.classList.remove('active');
+                }
+            } catch (error) {
+                console.error(error);
+                showStatus('loginStatus', '网络错误，请稍后重试', 'error');
+                progressContainer.classList.remove('active');
+            }
+        }
+
+        async function showTrainingResults() {
+            const resultsSection = document.getElementById('resultsSection');
+            const metricsDisplay = document.getElementById('metricsDisplay');
+            const performanceChart = document.getElementById('performanceChart');
+            const confusionChart = document.getElementById('confusionChart');
+
+            try {
+                const response = await fetch('/api/train/metrics');
+                const data = await response.json();
+
+                if (data.success && data.metrics) {
+                    let html = '';
+                    data.metrics.forEach(metric => {
+                        html += '<div class="metric-card"><h4>' + (metric.Model || metric.model) + '</h4><div class="value">' + ((metric.Accuracy || metric.accuracy || 0) * 100).toFixed(1) + '%</div><div class="label">准确率</div></div>';
+                    });
+                    metricsDisplay.innerHTML = html || '<p style="text-align: center; color: #666;">暂无指标数据</p>';
+                } else {
+                    metricsDisplay.innerHTML = '<p style="text-align: center; color: #666;">暂无指标数据</p>';
+                }
+            } catch (error) {
+                console.error(error);
+                metricsDisplay.innerHTML = '<p style="text-align: center; color: #666;">暂无指标数据</p>';
+            }
+
+            performanceChart.src = '/performance';
+            performanceChart.style.display = 'block';
+            confusionChart.src = '/confusion';
+            confusionChart.style.display = 'block';
+
+            resultsSection.style.display = 'block';
+        }
+
+        async function loadProductsForSelect() {
+            try {
+                const response = await fetch('/api/products');
+                const data = await response.json();
+
+                if (data.success && data.products) {
+                    const selects = [
+                        'trainingProductSelect',
+                        'recordProductSelect',
+                        'newRecordProductId'
+                    ];
+
+                    selects.forEach(selectId => {
+                        const select = document.getElementById(selectId);
+                        if (select) {
+                            const currentValue = select.value;
+                            select.innerHTML = '<option value="">不关联商品</option>';
+                            data.products.forEach(product => {
+                                select.innerHTML += '<option value="' + product.id + '">' + product.name + '</option>';
+                            });
+                            select.value = currentValue;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                const data = await response.json();
+
+                const productsList = document.getElementById('productsList');
+                if (data.success && data.products) {
+                    let html = '';
+                    data.products.forEach(product => {
+                        html += '<div class="product-item" style="padding: 15px; background: white; border-radius: 6px; margin-bottom: 10px;">';
+                        html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+                        html += '<div>';
+                        html += '<strong>' + product.name + '</strong>';
+                        if (product.category) {
+                            html += '<br><small style="color: #666;">分类：' + product.category + '</small>';
+                        }
+                        if (product.description) {
+                            html += '<br><small style="color: #666;">' + product.description + '</small>';
+                        }
+                        html += '</div>';
+                        html += '<div style="display: flex; gap: 5px;">';
+                        html += '<button class="btn btn-primary btn-sm" onclick="showProductComments(' + product.id + ', \'' + product.name.replace(/'/g, "\\'") + '\')">查看评论</button>';
+                        html += '<button class="btn btn-danger btn-sm" onclick="deleteProduct(' + product.id + ')">删除</button>';
+                        html += '</div>';
+                        html += '</div>';
+                        html += '</div>';
+                    });
+                    productsList.innerHTML = html || '<p style="text-align: center; color: #666;">暂无商品</p>';
+                } else {
+                    productsList.innerHTML = '<p style="text-align: center; color: #666;">加载失败</p>';
+                }
+            } catch (error) {
+                document.getElementById('productsList').innerHTML = '<p style="text-align: center; color: #666;">加载失败</p>';
+                console.error(error);
+            }
+        }
+
+        function showCreateProductForm() {
+            document.getElementById('createProductForm').style.display = 'block';
+        }
+
+        function hideCreateProductForm() {
+            document.getElementById('createProductForm').style.display = 'none';
+            document.getElementById('newProductName').value = '';
+            document.getElementById('newProductCategory').value = '';
+            document.getElementById('newProductDescription').value = '';
+        }
+
+        async function createProduct() {
+            const name = document.getElementById('newProductName').value;
+            const category = document.getElementById('newProductCategory').value;
+            const description = document.getElementById('newProductDescription').value;
+
+            if (!name.trim()) {
+                alert('请输入商品名称');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, category, description })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus('loginStatus', '商品创建成功', 'success');
+                    hideCreateProductForm();
+                    loadProducts();
+                    loadProductsForSelect();
+                } else {
+                    showStatus('loginStatus', data.error || data.message || '商品创建失败', 'error');
+                }
+            } catch (error) {
+                showStatus('loginStatus', '网络错误，请稍后重试', 'error');
+                console.error(error);
+            }
+        }
+
+        function showProductsList() {
+            document.getElementById('productsMainSection').style.display = 'block';
+            document.getElementById('productCommentsSection').style.display = 'none';
+            currentProductId = null;
+        }
+
+        async function showProductComments(productId, productName) {
+            currentProductId = productId;
+            document.getElementById('productsMainSection').style.display = 'none';
+            document.getElementById('productCommentsSection').style.display = 'block';
+            document.getElementById('currentProductName').textContent = productName;
+            await loadProductComments();
+        }
+
+        async function loadProductComments() {
+            if (!currentProductId) return;
+
+            try {
+                const response = await fetch('/api/products/' + currentProductId + '/comments');
+                const data = await response.json();
+
+                const commentsList = document.getElementById('commentsList');
+                if (data.success && data.comments) {
+                    let html = '';
+                    data.comments.forEach(comment => {
+                        html += '<div class="comment-item" style="padding: 10px; background: white; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start;">';
+                        html += '<div>';
+                        html += '<div>' + comment.content + '</div>';
+                        if (comment.sentiment_label !== undefined) {
+                            let labelText = '中性';
+                            let labelClass = 'label-neutral';
+                            if (comment.sentiment_label === 2) {
+                                labelText = '正面';
+                                labelClass = 'label-positive';
+                            } else if (comment.sentiment_label === 0) {
+                                labelText = '负面';
+                                labelClass = 'label-negative';
+                            }
+                            html += '<div style="margin-top: 5px; font-size: 0.8em;">情感：<span class="label-badge ' + labelClass + '">' + labelText + '</span></div>';
+                        }
+                        html += '</div>';
+                        html += '<button class="btn btn-danger btn-sm" onclick="deleteProductComment(' + comment.id + ')">删除</button>';
+                        html += '</div>';
+                    });
+                    commentsList.innerHTML = html || '<p style="text-align: center; color: #666;">暂无评论</p>';
+                } else {
+                    commentsList.innerHTML = '<p style="text-align: center; color: #666;">加载失败</p>';
+                }
+            } catch (error) {
+                document.getElementById('commentsList').innerHTML = '<p style="text-align: center; color: #666;">加载失败</p>';
+                console.error(error);
+            }
+        }
+
+        function showAddCommentsForm() {
+            document.getElementById('addCommentsForm').style.display = 'block';
+        }
+
+        function hideAddCommentsForm() {
+            document.getElementById('addCommentsForm').style.display = 'none';
+            document.getElementById('bulkCommentsInput').value = '';
+        }
+
+        async function saveBulkComments() {
+            if (!currentProductId) return;
+
+            const commentsText = document.getElementById('bulkCommentsInput').value;
+            const comments = commentsText.split('\n').filter(c => c.trim());
+
+            if (comments.length === 0) {
+                alert('请至少输入一条评论');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/products/' + currentProductId + '/comments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ comments })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus('loginStatus', '评论添加成功', 'success');
+                    hideAddCommentsForm();
+                    loadProductComments();
+                } else {
+                    showStatus('loginStatus', data.error || data.message || '评论添加失败', 'error');
+                }
+            } catch (error) {
+                showStatus('loginStatus', '网络错误，请稍后重试', 'error');
+                console.error(error);
+            }
+        }
+
+        async function deleteProductComment(commentId) {
+            if (!currentProductId || !confirm('确定要删除这条评论吗？')) return;
+
+            try {
+                const response = await fetch('/api/products/' + currentProductId + '/comments/' + commentId, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus('loginStatus', '评论删除成功', 'success');
+                    loadProductComments();
+                } else {
+                    showStatus('loginStatus', data.error || data.message || '评论删除失败', 'error');
+                }
+            } catch (error) {
+                showStatus('loginStatus', '网络错误，请稍后重试', 'error');
+                console.error(error);
+            }
+        }
+
+        async function deleteProduct(productId) {
+            if (!confirm('确定要删除这个商品吗？')) return;
+
+            try {
+                const response = await fetch('/api/products/' + productId, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus('loginStatus', '商品删除成功', 'success');
+                    loadProducts();
+                    loadProductsForSelect();
+                } else {
+                    showStatus('loginStatus', data.error || data.message || '商品删除失败', 'error');
+                }
+            } catch (error) {
+                showStatus('loginStatus', '网络错误，请稍后重试', 'error');
+                console.error(error);
+            }
+        }
+
+        async function loadTrainingRecords() {
+            try {
+                const response = await fetch('/api/training/records');
+                const data = await response.json();
+
+                const trainingRecordsList = document.getElementById('trainingRecordsList');
+                if (data.success && data.records) {
+                    let html = '';
+                    data.records.forEach(record => {
+                        html += '<div class="record-item" style="padding: 15px; background: white; border-radius: 6px; margin-bottom: 10px;">';
+                        html += '<div style="display: flex; justify-content: space-between; align-items: flex-start;">';
+                        html += '<div>';
+                        html += '<strong>模型：' + record.model_name + '</strong><br>';
+                        html += '<small style="color: #666;">数据集：' + (record.dataset_type || '未知') + '</small><br>';
+                        if (record.product_name) {
+                            html += '<small style="color: #666;">商品：' + record.product_name + '</small><br>';
+                        }
+                        if (record.accuracy !== undefined) {
+                            html += '<small style="color: #666;">准确率：' + (record.accuracy * 100).toFixed(1) + '%</small><br>';
+                        }
+                        html += '<small style="color: #666;">时间：' + (record.created_at || '未知') + '</small>';
+                        html += '</div>';
+                        html += '<div style="display: flex; gap: 5px;">';
+                        html += '<button class="btn btn-danger btn-sm" onclick="deleteTrainingRecord(' + record.id + ')">删除</button>';
+                        html += '</div>';
+                        html += '</div>';
+                        html += '</div>';
+                    });
+                    trainingRecordsList.innerHTML = html || '<p style="text-align: center; color: #666;">暂无训练记录</p>';
+                } else {
+                    trainingRecordsList.innerHTML = '<p style="text-align: center; color: #666;">加载失败</p>';
+                }
+            } catch (error) {
+                document.getElementById('trainingRecordsList').innerHTML = '<p style="text-align: center; color: #666;">加载失败</p>';
+                console.error(error);
+            }
+        }
+
+        async function loadRecordsByProduct() {
+            const productId = document.getElementById('recordProductSelect').value;
+            let url = '/api/training/records';
+            if (productId) {
+                url = '/api/training/records?product_id=' + productId;
+            }
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const trainingRecordsList = document.getElementById('trainingRecordsList');
+                if (data.success && data.records) {
+                    let html = '';
+                    data.records.forEach(record => {
+                        html += '<div class="record-item" style="padding: 15px; background: white; border-radius: 6px; margin-bottom: 10px;">';
+                        html += '<div style="display: flex; justify-content: space-between; align-items: flex-start;">';
+                        html += '<div>';
+                        html += '<strong>模型：' + record.model_name + '</strong><br>';
+                        html += '<small style="color: #666;">数据集：' + (record.dataset_type || '未知') + '</small><br>';
+                        if (record.product_name) {
+                            html += '<small style="color: #666;">商品：' + record.product_name + '</small><br>';
+                        }
+                        if (record.accuracy !== undefined) {
+                            html += '<small style="color: #666;">准确率：' + (record.accuracy * 100).toFixed(1) + '%</small><br>';
+                        }
+                        html += '<small style="color: #666;">时间：' + (record.created_at || '未知') + '</small>';
+                        html += '</div>';
+                        html += '<div style="display: flex; gap: 5px;">';
+                        html += '<button class="btn btn-danger btn-sm" onclick="deleteTrainingRecord(' + record.id + ')">删除</button>';
+                        html += '</div>';
+                        html += '</div>';
+                        html += '</div>';
+                    });
+                    trainingRecordsList.innerHTML = html || '<p style="text-align: center; color: #666;">暂无训练记录</p>';
+                } else {
+                    trainingRecordsList.innerHTML = '<p style="text-align: center; color: #666;">加载失败</p>';
+                }
+            } catch (error) {
+                document.getElementById('trainingRecordsList').innerHTML = '<p style="text-align: center; color: #666;">加载失败</p>';
+                console.error(error);
+            }
+        }
+
+        function showCreateRecordForm() {
+            document.getElementById('createRecordForm').style.display = 'block';
+        }
+
+        function hideCreateRecordForm() {
+            document.getElementById('createRecordForm').style.display = 'none';
+        }
+
+        async function createTrainingRecord() {
+            const modelName = document.getElementById('newRecordModelName').value;
+            const datasetType = document.getElementById('newRecordDatasetType').value;
+            const productId = document.getElementById('newRecordProductId').value;
+
+            try {
+                const formData = new FormData();
+                formData.append('model_name', modelName);
+                formData.append('dataset_type', datasetType);
+                if (productId) {
+                    formData.append('product_id', productId);
+                }
+
+                const response = await fetch('/api/training/records', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus('loginStatus', '训练记录创建成功', 'success');
+                    hideCreateRecordForm();
+                    loadTrainingRecords();
+                } else {
+                    showStatus('loginStatus', data.error || data.message || '训练记录创建失败', 'error');
+                }
+            } catch (error) {
+                showStatus('loginStatus', '网络错误，请稍后重试', 'error');
+                console.error(error);
+            }
+        }
+
+        async function deleteTrainingRecord(recordId) {
+            if (!confirm('确定要删除这条训练记录吗？')) return;
+
+            try {
+                const response = await fetch('/api/training/records/' + recordId, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus('loginStatus', '训练记录删除成功', 'success');
+                    loadTrainingRecords();
+                } else {
+                    showStatus('loginStatus', data.error || data.message || '训练记录删除失败', 'error');
+                }
+            } catch (error) {
+                showStatus('loginStatus', '网络错误，请稍后重试', 'error');
+                console.error(error);
+            }
+        }
+
+        async function loadEmotionDictionary() {
+            try {
+                const response = await fetch('/api/emotion_dictionary');
+                const data = await response.json();
+
+                const emotionDictionaryList = document.getElementById('emotionDictionaryList');
+                if (data.success && data.words) {
+                    renderEmotionDictionary(data.words);
+                } else {
+                    emotionDictionaryList.innerHTML = '<p style="text-align: center; color: #666;">加载失败</p>';
+                }
+            } catch (error) {
+                document.getElementById('emotionDictionaryList').innerHTML = '<p style="text-align: center; color: #666;">加载失败</p>';
+                console.error(error);
+            }
+        }
+
+        function renderEmotionDictionary(words) {
+            const emotionDictionaryList = document.getElementById('emotionDictionaryList');
+            let html = '';
+            words.forEach(word => {
+                let labelText = '中性';
+                let labelClass = 'label-neutral';
+                if (word.sentiment_type === 2) {
+                    labelText = '正面';
+                    labelClass = 'label-positive';
+                } else if (word.sentiment_type === 0) {
+                    labelText = '负面';
+                    labelClass = 'label-negative';
+                }
+
+                html += '<div class="word-item">';
+                html += '<div>';
+                html += '<strong>' + word.word + '</strong> ';
+                html += '<span class="label-badge ' + labelClass + '">' + labelText + '</span>';
+                html += '<br><small style="color: #666;">权重：' + word.weight + ' | 强度：' + word.intensity + '</small>';
+                html += '</div>';
+                html += '<div style="display: flex; gap: 5px;">';
+                html += '<button class="btn btn-primary btn-sm" onclick="editEmotionWord(' + word.id + ')">编辑</button>';
+                html += '<button class="btn btn-danger btn-sm" onclick="deleteEmotionWord(' + word.id + ')">删除</button>';
+                html += '</div>';
+                html += '</div>';
+            });
+            emotionDictionaryList.innerHTML = html || '<p style="text-align: center; color: #666;">暂无词汇</p>';
+        }
+
+        async function filterEmotionWords() {
+            const sentimentType = document.getElementById('sentimentTypeFilter').value;
+            let url = '/api/emotion_dictionary';
+            if (sentimentType) {
+                url = '/api/emotion_dictionary?sentiment_type=' + sentimentType;
+            }
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success && data.words) {
+                    renderEmotionDictionary(data.words);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function searchEmotionWords() {
+            const searchText = document.getElementById('wordSearch').value;
+            if (!searchText.trim()) {
+                loadEmotionDictionary();
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/emotion_dictionary/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word: searchText })
+                });
+                const data = await response.json();
+
+                if (data.success && data.words) {
+                    renderEmotionDictionary(data.words);
+                } else {
+                    document.getElementById('emotionDictionaryList').innerHTML = '<p style="text-align: center; color: #666;">未找到匹配的词汇</p>';
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function showAddWordForm() {
+            document.getElementById('formTitle').textContent = '添加情感词汇';
+            document.getElementById('currentWordId').value = '';
+            document.getElementById('wordInput').value = '';
+            document.getElementById('sentimentTypeInput').value = '1';
+            document.getElementById('weightInput').value = '1.0';
+            document.getElementById('intensityInput').value = 'medium';
+            document.getElementById('addWordForm').style.display = 'block';
+        }
+
+        function hideAddWordForm() {
+            document.getElementById('addWordForm').style.display = 'none';
+        }
+
+        async function editEmotionWord(wordId) {
+            try {
+                const response = await fetch('/api/emotion_dictionary/' + wordId);
+                const data = await response.json();
+
+                if (data.success && data.word) {
+                    const word = data.word;
+                    document.getElementById('formTitle').textContent = '编辑情感词汇';
+                    document.getElementById('currentWordId').value = word.id;
+                    document.getElementById('wordInput').value = word.word;
+                    document.getElementById('sentimentTypeInput').value = word.sentiment_type.toString();
+                    document.getElementById('weightInput').value = word.weight;
+                    document.getElementById('intensityInput').value = word.intensity;
+                    document.getElementById('addWordForm').style.display = 'block';
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function saveEmotionWord() {
+            const wordId = document.getElementById('currentWordId').value;
+            const word = document.getElementById('wordInput').value;
+            const sentimentType = parseInt(document.getElementById('sentimentTypeInput').value);
+            const weight = parseFloat(document.getElementById('weightInput').value);
+            const intensity = document.getElementById('intensityInput').value;
+
+            if (!word.trim()) {
+                alert('请输入词汇');
+                return;
+            }
+
+            try {
+                let url = '/api/emotion_dictionary';
+                let method = 'POST';
+                
+                if (wordId) {
+                    url = '/api/emotion_dictionary/' + wordId;
+                    method = 'PUT';
+                }
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word, sentiment_type: sentimentType, weight, intensity })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus('loginStatus', '词汇保存成功', 'success');
+                    hideAddWordForm();
+                    loadEmotionDictionary();
+                } else {
+                    showStatus('loginStatus', data.error || data.message || '词汇保存失败', 'error');
+                }
+            } catch (error) {
+                showStatus('loginStatus', '网络错误，请稍后重试', 'error');
+                console.error(error);
+            }
+        }
+
+        async function deleteEmotionWord(wordId) {
+            if (!confirm('确定要删除这个词汇吗？')) return;
+
+            try {
+                const response = await fetch('/api/emotion_dictionary/' + wordId, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus('loginStatus', '词汇删除成功', 'success');
+                    loadEmotionDictionary();
+                } else {
+                    showStatus('loginStatus', data.error || data.message || '词汇删除失败', 'error');
+                }
+            } catch (error) {
+                showStatus('loginStatus', '网络错误，请稍后重试', 'error');
+                console.error(error);
+            }
+        }
+
+        async function generateMarketingCopy() {
+            const productName = document.getElementById('marketingProductName').value;
+            const apiKey = document.getElementById('marketingApiKey').value;
+            const businessAdvice = document.getElementById('marketingBusinessAdvice').value;
+            const positiveReviews = document.getElementById('marketingPositiveReviews').value;
+
+            if (!productName.trim()) {
+                alert('请输入商品名称');
+                return;
+            }
+
+            if (!apiKey.trim()) {
+                alert('请输入 DeepSeek API 密钥');
+                return;
+            }
+
+            const progressContainer = document.getElementById('marketingProgress');
+            const progressFill = document.getElementById('marketingProgressFill');
+            const progressMsg = document.getElementById('marketingProgressMsg');
+
+            progressContainer.classList.add('active');
+            progressFill.style.width = '30%';
+            progressFill.textContent = '30%';
+            progressMsg.textContent = '正在生成...';
+
+            try {
+                const response = await fetch('/api/marketing/copy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        product_name: productName,
+                        api_key: apiKey,
+                        business_advice: businessAdvice,
+                        positive_reviews: positiveReviews
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    progressFill.style.width = '100%';
+                    progressFill.textContent = '100%';
+                    progressMsg.textContent = '生成完成！';
+
+                    document.getElementById('marketingCopyResult').textContent = data.marketing_copy || '生成失败';
+                    document.getElementById('marketingResultsSection').style.display = 'block';
+
+                    setTimeout(() => {
+                        progressContainer.classList.remove('active');
+                    }, 2000);
+                } else {
+                    showStatus('loginStatus', data.error || data.message || '生成失败', 'error');
+                    progressContainer.classList.remove('active');
+                }
+            } catch (error) {
+                showStatus('loginStatus', '网络错误，请稍后重试', 'error');
+                console.error(error);
+                progressContainer.classList.remove('active');
+            }
+        }
+
+        // ==================== 管理员相关函数 ====================
+        
+        let currentUser = null;
+        
+        function checkAdminRole(user) {
+            currentUser = user;
+            if (user && user.role === 'admin') {
+                document.getElementById('adminTabBtn').style.display = 'inline-block';
+            } else {
+                document.getElementById('adminTabBtn').style.display = 'none';
+            }
+        }
+
+        async function loadAdminStats() {
+            try {
+                const response = await fetch('/api/admin/stats');
+                const data = await response.json();
+                if (data.success) {
+                    const stats = data.stats;
+                    const html = `
+                        <div class="metric-card"><h4>总用户数</h4><div class="value">${stats.total_users}</div></div>
+                        <div class="metric-card"><h4>管理员数</h4><div class="value">${stats.admin_users}</div></div>
+                        <div class="metric-card"><h4>活跃用户</h4><div class="value">${stats.active_users}</div></div>
+                        <div class="metric-card"><h4>登录次数</h4><div class="value">${stats.total_logins}</div></div>
+                        <div class="metric-card"><h4>评论总数</h4><div class="value">${stats.total_comments}</div></div>
+                        <div class="metric-card"><h4>分析次数</h4><div class="value">${stats.total_analysis}</div></div>
+                        <div class="metric-card"><h4>训练记录</h4><div class="value">${stats.total_training}</div></div>
+                        <div class="metric-card"><h4>商品总数</h4><div class="value">${stats.total_products}</div></div>
+                        <div class="metric-card"><h4>情感词典</h4><div class="value">135</div></div>
+                        <div class="metric-card"><h4>数据库大小</h4><div class="value">${stats.db_size_formatted}</div></div>
+                        <div class="metric-card"><h4>上传目录</h4><div class="value">${stats.upload_dir_formatted}</div></div>
+                        <div class="metric-card"><h4>结果目录</h4><div class="value">${stats.results_dir_formatted}</div></div>
+                        <div class="metric-card"><h4>总存储空间</h4><div class="value" style="color: #2196F3; font-weight: bold;">${stats.total_storage_formatted}</div></div>
+                    `;
+                    document.getElementById('adminStats').innerHTML = html;
+                    
+                    // 加载系统配置
+                    loadAdminConfig();
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        
+        async function loadAdminConfig() {
+            try {
+                const response = await fetch('/api/admin/config');
+                const data = await response.json();
+                if (data.success) {
+                    const config = data.config;
+                    const maxFileSizeMB = Math.round(config.max_file_size / 1024 / 1024);
+                    const html = `
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">最大文件上传大小 (MB)</label>
+                                <input type="number" id="configMaxFileSize" value="${maxFileSizeMB}" min="1" max="1024" 
+                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">调试模式</label>
+                                <div style="padding: 10px; background: ${config.debug_mode ? '#e8f5e9' : '#ffebee'}; border-radius: 4px;">
+                                    ${config.debug_mode ? '✓ 已开启' : '✗ 已关闭'}
+                                </div>
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">DeepSeek API Key</label>
+                                <input type="password" id="configDeepseekApiKey" value="${config.deepseek_api_key}" 
+                                    placeholder="sk-xxxxxxxxxxxxxxxxxxxx"
+                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <button class="btn btn-primary" onclick="saveAdminConfig()">保存配置</button>
+                        </div>
+                    `;
+                    document.getElementById('adminConfig').innerHTML = html;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        
+        async function saveAdminConfig() {
+            try {
+                const maxFileSize = parseInt(document.getElementById('configMaxFileSize').value);
+                const deepseekApiKey = document.getElementById('configDeepseekApiKey').value;
+                
+                const response = await fetch('/api/admin/config', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        max_file_size: maxFileSize,
+                        deepseek_api_key: deepseekApiKey
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('loginStatus', '配置保存成功', 'success');
+                    loadAdminConfig();
+                } else {
+                    showStatus('loginStatus', data.message || '配置保存失败', 'error');
+                }
+            } catch (error) {
+                showStatus('loginStatus', '网络错误，请稍后重试', 'error');
+                console.error(error);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users');
+                const data = await response.json();
+                if (data.success) {
+                    let html = '<table class="history-table" style="width: 100%;"><thead><tr><th>ID</th><th>用户名</th><th>邮箱</th><th>角色</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
+                    for (const user of data.users) {
+                        const roleBadge = user.role === 'admin' ? '<span class="label-badge label-positive">管理员</span>' : '<span class="label-badge label-neutral">普通用户</span>';
+                        const statusBadge = user.is_active === 1 ? '<span class="label-badge label-positive">活跃</span>' : '<span class="label-badge label-negative">禁用</span>';
+                        html += `
+                            <tr>
+                                <td>${user.id}</td>
+                                <td>${user.username}</td>
+                                <td>${user.email || '-'}</td>
+                                <td>${roleBadge}</td>
+                                <td>${statusBadge}</td>
+                                <td>${user.created_at}</td>
+                                <td>
+                                    ${user.id !== currentUser?.id ? `
+                                        <button class="btn btn-sm ${user.role === 'admin' ? 'btn-secondary' : 'btn-success'}" onclick="toggleUserRole(${user.id}, '${user.role === 'admin' ? 'user' : 'admin'}')">
+                                            ${user.role === 'admin' ? '降级' : '升级'}
+                                        </button>
+                                        <button class="btn btn-sm ${user.is_active === 1 ? 'btn-danger' : 'btn-success'}" onclick="toggleUserActive(${user.id}, ${user.is_active === 1 ? 0 : 1})">
+                                            ${user.is_active === 1 ? '禁用' : '启用'}
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">删除</button>
+                                    ` : '<span style="color: #999;">当前用户</span>'}
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    html += '</tbody></table>';
+                    document.getElementById('usersList').innerHTML = html;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function toggleUserRole(userId, newRole) {
+            try {
+                const response = await fetch('/api/admin/users/' + userId, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: newRole })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    loadUsers();
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function toggleUserActive(userId, isActive) {
+            try {
+                const response = await fetch('/api/admin/users/' + userId, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_active: isActive })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    loadUsers();
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('确定要删除这个用户吗？')) return;
+            try {
+                const response = await fetch('/api/admin/users/' + userId, { method: 'DELETE' });
+                const data = await response.json();
+                if (data.success) {
+                    loadUsers();
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function loadLoginHistory() {
+            try {
+                const response = await fetch('/api/admin/login-history');
+                const data = await response.json();
+                if (data.success) {
+                    let html = '<table class="history-table" style="width: 100%;"><thead><tr><th>ID</th><th>用户</th><th>IP地址</th><th>登录时间</th></tr></thead><tbody>';
+                    for (const h of data.history) {
+                        html += `<tr><td>${h.id}</td><td>${h.username || '未知'}</td><td>${h.ip_address || '-'}</td><td>${h.created_at}</td></tr>`;
+                    }
+                    html += '</tbody></table>';
+                    document.getElementById('loginHistoryList').innerHTML = html;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function loadAllAnalysisHistory() {
+            try {
+                const response = await fetch('/api/admin/analysis-history');
+                const data = await response.json();
+                if (data.success) {
+                    let html = '<table class="history-table" style="width: 100%;"><thead><tr><th>ID</th><th>用户</th><th>来源类型</th><th>评论数</th><th>时间</th></tr></thead><tbody>';
+                    for (const h of data.history) {
+                        html += `<tr><td>${h.id}</td><td>${h.username || '未知'}</td><td>${h.source_type}</td><td>${h.comment_count}</td><td>${h.created_at}</td></tr>`;
+                    }
+                    html += '</tbody></table>';
+                    document.getElementById('allAnalysisHistory').innerHTML = html;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function loadAuditLogs() {
+            try {
+                const response = await fetch('/api/admin/audit-logs');
+                const data = await response.json();
+                if (data.success) {
+                    let html = '<table class="history-table" style="width: 100%;"><thead><tr><th>ID</th><th>用户</th><th>操作</th><th>IP</th><th>时间</th></tr></thead><tbody>';
+                    for (const log of data.logs) {
+                        html += `<tr><td>${log.id}</td><td>${log.username || '未知'}</td><td>${log.action}</td><td>${log.ip_address || '-'}</td><td>${log.created_at}</td></tr>`;
+                    }
+                    html += '</tbody></table>';
+                    document.getElementById('auditLogsList').innerHTML = html;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function loadUserLoginHistory() {
+            try {
+                const response = await fetch('/api/user/login-history');
+                const data = await response.json();
+                if (data.success) {
+                    if (data.history.length === 0) {
+                        document.getElementById('userLoginHistory').innerHTML = '<p style="color: #666;">暂无登录记录</p>';
+                        return;
+                    }
+                    let html = '<table class="history-table" style="width: 100%;"><thead><tr><th>登录时间</th><th>IP地址</th><th>浏览器</th></tr></thead><tbody>';
+                    for (const h of data.history) {
+                        html += `<tr><td>${h.login_time}</td><td>${h.ip_address || '-'}</td><td>${h.user_agent ? h.user_agent.substring(0, 50) + '...' : '-'}</td></tr>`;
+                    }
+                    html += '</tbody></table>';
+                    document.getElementById('userLoginHistory').innerHTML = html;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function loadUserAnalysisHistory() {
+            try {
+                const response = await fetch('/api/user/analysis-history');
+                const data = await response.json();
+                if (data.success) {
+                    if (data.history.length === 0) {
+                        document.getElementById('userAnalysisHistory').innerHTML = '<p style="color: #666;">暂无分析记录</p>';
+                        return;
+                    }
+                    let html = '<table class="history-table" style="width: 100%;"><thead><tr><th>ID</th><th>来源类型</th><th>商品</th><th>评论数</th><th>情感分布</th><th>时间</th></tr></thead><tbody>';
+                    for (const h of data.history) {
+                        const labels = h.sentiment_labels || {};
+                        const dist = `负面:${labels['0'] || 0} 中性:${labels['1'] || 0} 正面:${labels['2'] || 0}`;
+                        html += `<tr><td>${h.id}</td><td>${h.source_type}</td><td>${h.product_name || '-'}</td><td>${h.comment_count}</td><td>${dist}</td><td>${h.created_at}</td></tr>`;
+                    }
+                    html += '</tbody></table>';
+                    document.getElementById('userAnalysisHistory').innerHTML = html;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // 重写登录成功回调，检查管理员角色
+        const originalUserLoginSuccessCallback = null;
+        
+        // 修改加载管理员数据的时机
+        function loadAdminData() {
+            if (currentUser && currentUser.role === 'admin') {
+                loadAdminStats();
+                loadUsers();
+                loadLoginHistory();
+                loadAllAnalysisHistory();
+                loadAuditLogs();
+            }
+        }
+
+        window.onload = function() {
+            loadRecentUsers();
+        };
+    </script>
+</body>
+</html>
