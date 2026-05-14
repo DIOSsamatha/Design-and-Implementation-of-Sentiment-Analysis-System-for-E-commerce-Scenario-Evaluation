@@ -1,0 +1,15 @@
+{
+  "negative": {
+    "count": 20,
+    "percentage": 22.2
+  },
+  "neutral": {
+    "count": 40,
+    "percentage": 44.4
+  },
+  "positive": {
+    "count": 30,
+    "percentage": 33.3
+  },
+  "total": 90
+}
