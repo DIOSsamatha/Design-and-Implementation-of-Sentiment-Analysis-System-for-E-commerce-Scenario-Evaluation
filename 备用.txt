@@ -1,0 +1,130 @@
+data-loader：
+import pandas as pd
+import numpy as np
+import jieba
+import re
+from sklearn.model_selection import train_test_split
+import logging
+from config import DATA_CONFIG
+
+logger = logging.getLogger(__name__)
+
+def preprocess_text(text):
+    """文本预处理"""
+    if pd.isna(text) or text is None:
+        return ""
+    text = re.sub(r'[^\w\s]', '', text)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+def tokenize_chinese_text(text):
+    """中文分词"""
+    return ' '.join(jieba.cut(text))
+
+def generate_sample_data(num_samples=3000):
+    """生成模拟的电商评论数据"""
+    logger.info("生成模拟电商评论数据...")
+    
+    positive_comments = [
+        "商品质量很好，物流很快，包装精美，非常满意！",
+        "性价比高，使用效果很棒，会再次购买",
+        "卖家服务态度很好，解决问题及时，点赞",
+        "产品外观漂亮，功能齐全，物超所值",
+        "发货速度快，正品保证，推荐购买"
+    ]
+    
+    negative_comments = [
+        "质量很差，用了一次就坏了，不推荐",
+        "物流太慢，等了一个星期才到，失望",
+        "商品与描述不符，尺寸不对，颜色差异大",
+        "客服态度恶劣，解决问题效率低下",
+        "包装简陋，商品有划痕，像是二手货"
+    ]
+    
+    neutral_comments = [
+        "商品一般，没有特别突出的地方",
+        "中规中矩，符合预期，没什么惊喜",
+        "普普通通，价格还算合理",
+        "没什么特别的感觉，用着还行"
+    ]
+    
+    texts = []
+    labels = []
+    
+    # 生成正面评论
+    for _ in range(num_samples // 3):
+        template = np.random.choice(positive_comments)
+        variations = ["", "真的很不错", "非常推荐", "五星好评"]
+        text = template + np.random.choice(variations)
+        texts.append(text)
+        labels.append(2)  # 正面标签
+    
+    # 生成负面评论
+    for _ in range(num_samples // 3):
+        template = np.random.choice(negative_comments)
+        variations = ["", "太失望了", "不会再来", "差评"]
+        text = template + np.random.choice(variations)
+        texts.append(text)
+        labels.append(0)  # 负面标签
+    
+    # 生成中性评论
+    for _ in range(num_samples // 3):
+        template = np.random.choice(neutral_comments)
+        variations = ["", "还可以", "一般般", "马马虎虎"]
+        text = template + np.random.choice(variations)
+        texts.append(text)
+        labels.append(1)  # 中性标签
+    
+    # 打乱数据
+    indices = np.random.permutation(len(texts))
+    texts = [texts[i] for i in indices]
+    labels = [labels[i] for i in indices]
+    
+    return texts, labels
+
+def prepare_data():
+    """准备训练数据"""
+    texts, labels = generate_sample_data(DATA_CONFIG['num_samples'])
+    
+    # 划分数据集
+    train_texts, test_texts, train_labels, test_labels = train_test_split(
+        texts, labels, 
+        test_size=DATA_CONFIG['test_size'], 
+        random_state=DATA_CONFIG['random_state'], 
+        stratify=labels
+    )
+    
+    # 进一步划分训练集和验证集
+    train_texts, val_texts, train_labels, val_labels = train_test_split(
+        train_texts, train_labels, 
+        test_size=DATA_CONFIG['val_size'], 
+        random_state=DATA_CONFIG['random_state'], 
+        stratify=train_labels
+    )
+    
+    logger.info(f"训练集大小: {len(train_texts)}")
+    logger.info(f"验证集大小: {len(val_texts)}")
+    logger.info(f"测试集大小: {len(test_texts)}")
+    
+    return {
+        'train': {'texts': train_texts, 'labels': train_labels},
+        'val': {'texts': val_texts, 'labels': val_labels},
+        'test': {'texts': test_texts, 'labels': test_labels}
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+API：sk-4fcb63f3992c4308a96c68b8877e8270
